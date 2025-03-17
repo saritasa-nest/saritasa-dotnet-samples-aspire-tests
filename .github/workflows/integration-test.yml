@@ -3,7 +3,7 @@ name: integration-test
 on:
   push:
     branches:
-      - master
+      - develop
 
   workflow_dispatch:
 
