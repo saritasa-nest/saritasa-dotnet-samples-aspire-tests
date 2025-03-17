@@ -5,7 +5,6 @@ on:
     branches:
       - master
 
-  # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
 jobs:
@@ -13,6 +12,7 @@ jobs:
     runs-on: ubuntu-latest
 
     services:
+      # Used as workaround for DB initializer. Not related to Aspire.
       postgres:
         image: postgres:latest
         env:
@@ -21,7 +21,6 @@ jobs:
           POSTGRES_USER: postgres
         ports:
           - 5432:5432
-        # Set health checks to wait until postgres has started
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -42,12 +41,13 @@ jobs:
     - name: Install Aspire Workload
       run: dotnet workload install aspire
 
+    # Used as workaround for DB initializer. Not related to Aspire.
     - name: App Settings Variable Substitution
       uses: microsoft/variable-substitution@v1
       with:
         files: 'AspireTesting/appsettings.json'
       env:
-        ConnectionStrings.AppDatabase: ${{ secrets.CONNECTIONSTRINGS_APPDATABASE }}
+        ConnectionStrings.AppDatabase: Server=postgres;Database=Testing;Uid=postgres;Pwd=postgres;
 
     - name: Generate SSL Certificate
       run: dotnet dev-certs https --clean && dotnet dev-certs https --trust
