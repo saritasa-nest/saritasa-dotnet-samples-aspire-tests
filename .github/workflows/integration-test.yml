@@ -47,7 +47,7 @@ jobs:
       with:
         files: 'AspireTesting/appsettings.json'
       env:
-        ConnectionStrings.AppDatabase: Server=postgres;Database=Testing;Uid=postgres;Pwd=postgres;
+        ConnectionStrings.AppDatabase: Server=localhost;Database=Testing;Uid=postgres;Pwd=postgres;
 
     - name: Generate SSL Certificate
       run: dotnet dev-certs https --clean && dotnet dev-certs https --trust
