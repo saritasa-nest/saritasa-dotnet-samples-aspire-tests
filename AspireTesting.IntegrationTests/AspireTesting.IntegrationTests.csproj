@@ -1,0 +1,86 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.Testing" Version="8.1.0" />
+    <PackageReference Include="coverlet.collector" Version="6.0.2" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.10.0" />
+    <PackageReference Include="MSTest.TestFramework" Version="3.7.0" />
+    <PackageReference Include="xunit" Version="2.9.0" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+	<PackageReference Include="NSwag.MSBuild" Version="14.2.0">
+	 <PrivateAssets>all</PrivateAssets>
+	 <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+	</PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\AspireTesting.AppHost\AspireTesting.AppHost.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="System.Net" />
+    <Using Include="Microsoft.Extensions.DependencyInjection" />
+    <Using Include="Aspire.Hosting.ApplicationModel" />
+    <Using Include="Aspire.Hosting.Testing" />
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+	<UsingTask TaskName="FixGenerics" TaskFactory="RoslynCodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
+		<ParameterGroup>
+			<Path ParameterType="System.String" Required="true" />
+		</ParameterGroup>
+		<Task>
+			<Code Type="Fragment" Language="cs">
+				<![CDATA[
+          var content = File.ReadAllText(Path);
+          content = content.Replace("_gLeft_", "<");
+          content = content.Replace("_gRight_", ">");
+          content = content.Replace("_gComma_", ",");
+          File.WriteAllText(Path, content);
+        ]]>
+			</Code>
+		</Task>
+	</UsingTask>
+
+	<Target Name="HttpClientGeneration" AfterTargets="ResolveReferences" BeforeTargets="PrepareResources">
+		<PropertyGroup>
+			<SolutionDirectory>$(ProjectDir)../</SolutionDirectory>
+			<ApiClientObjectFolder>$(ProjectDir)obj</ApiClientObjectFolder>
+			<ApiInterfaceObjectFolder>$(ProjectDir)obj</ApiInterfaceObjectFolder>
+			<ApiClientFile>ApiClient.cs</ApiClientFile>
+			<ApiInterfaceFile>IApiClient.cs</ApiInterfaceFile>
+
+			<ApiClientFile>$(ApiClientObjectFolder)/$(Configuration)/$(TargetFramework)/$(ApiClientFile)</ApiClientFile>
+			<ApiInterfaceFile>$(ApiInterfaceObjectFolder)/$(Configuration)/$(TargetFramework)/$(ApiInterfaceFile)</ApiInterfaceFile>
+			<ToolsDirectory>$(SolutionDirectory)tools</ToolsDirectory>
+			<NSwagConfigFile>$(ToolsDirectory)nswag.json</NSwagConfigFile>
+			<OpenApiSpec>$(SolutionDirectory)swagger.json</OpenApiSpec>
+		</PropertyGroup>
+
+		<!-- Create C# HTTP client files. -->
+		<Exec WorkingDirectory="$(ToolsDirectory)" Command="$(NSwagExe_Net80) run nswag.json /variables:ApiClientFile=&quot;$(ApiClientFile)&quot;,ApiInterfaceFile=&quot;$(ApiInterfaceFile)&quot;,OpenApiSpec=&quot;$(OpenApiSpec)&quot;" ContinueOnError="false">
+			<Output TaskParameter="ExitCode" PropertyName="ErrorCode" />
+		</Exec>
+
+		<Warning Text="Unable to update HTTP client for Cloud API. This may generate build or runtime errors. Check if your local API is launched." Condition="'$(ErrorCode)' == '-1'" />
+
+		<!-- Replace generic bracket and comma placeholders with correct symbols. -->
+		<FixGenerics Path="$(ApiClientFile)" />
+		<FixGenerics Path="$(ApiInterfaceFile)" />
+
+		<!-- Compile created files. -->
+		<ItemGroup>
+			<Compile Include="$(ApiInterfaceFile)" />
+			<Compile Include="$(ApiClientFile)" />
+		</ItemGroup>
+	</Target>
+
+</Project>

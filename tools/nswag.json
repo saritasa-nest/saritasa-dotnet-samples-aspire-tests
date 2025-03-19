@@ -1,0 +1,23 @@
+{
+  "runtime": "Net80",
+    "defaultVariables": null,
+    "documentGenerator": {
+        "fromDocument": {
+            "url": "$(OpenApiSpec)",
+            "output": null
+        }
+    },
+  "codeGenerators": {
+    "openApiToCSharpClient": {
+    "output": "$(ApiClientFile)",
+    "className": "ApiClient",
+    "namespace": "AspireTesting.IntegrationTests.Implementations",
+    "generateDtoTypes": true,
+    "generatePrepareRequestAndProcessResponseAsAsyncMethods": true,
+    "generateContractsOutput": true,
+    "generateClientInterfaces": true,
+    "contractsOutputFilePath": "$(ApiInterfaceFile)",
+    "contractsNamespace": "AspireTesting.IntegrationTests.Abstractions"
+    }
+  }
+}

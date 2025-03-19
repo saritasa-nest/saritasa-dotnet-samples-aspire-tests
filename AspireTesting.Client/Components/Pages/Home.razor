@@ -1,0 +1,32 @@
+﻿@page "/"
+@using RestSharp
+@inject RestClient restClient
+
+<ul style="display: flex; flex-direction: column; gap: 6px;">
+    @foreach(var note in notes)
+    {
+        <li>@note.Text</li>
+    }
+</ul>
+
+@code{
+    private IEnumerable<Note> notes = new List<Note>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var getNotesRequest = new RestRequest("notes");
+        var result = await restClient.ExecuteAsync<IEnumerable<Note>>(getNotesRequest);
+
+        if (result.Data is null)
+        {
+            return;
+        }
+
+        notes = result.Data;
+    }
+
+    public class Note
+    {
+        public string Text { get; set; }
+    }
+}
