@@ -9,7 +9,7 @@ on:
 
 jobs:
   build:
-    runs-on: saritasa-rocks-eks
+    runs-on: ubuntu-latest
 
     services:
       # Used as workaround for DB initializer. Not related to Aspire.
